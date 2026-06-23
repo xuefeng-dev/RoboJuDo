@@ -83,12 +83,7 @@ def main():
 
     pipeline = pipeline_class(cfg=cfg)
 
-    if not cfg.env.is_sim:
-        pipeline.prepare()
-    elif pipeline._has_default_pose_mode:
-        # In sim without prepare: hold default pose until R is pressed.
-        pipeline._set_default_pose_mode(True)
-        logger.warning("Sim mode — holding default pose, press R to start motion")
+    pipeline.prepare()
 
     while True:
         time_start = time.time()

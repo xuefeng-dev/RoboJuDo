@@ -354,6 +354,7 @@ class g1_protomotions_tracker(RlPipelineCfg):
     Usage::
 
         python scripts/run_tracker_pipeline.py -c g1_protomotions_tracker \\
+            --onnx-path /path/to/unified_pipeline.onnx \\
             --motion-path assets/motions/g1/g1_bones_seed_mini.pt \\
             --motion-index 0
     """
@@ -362,6 +363,16 @@ class g1_protomotions_tracker(RlPipelineCfg):
     env: G1MujocoEnvCfg = G1MujocoEnvCfg(
         born_place_align=False,
         random_heading=True,
+        virtual_gantry_enabled=True,
+        virtual_gantry_bodies=[
+            "left_shoulder_pitch_link",
+            "right_shoulder_pitch_link",
+        ],
+        virtual_gantry_height_offset=0.02,
+        virtual_gantry_stiffness=1200.0,
+        virtual_gantry_damping=120.0,
+        virtual_gantry_support_fraction=0.22,
+        virtual_gantry_max_force=220.0,
     )
     ctrl: list[KeyboardCtrlCfg] = [
         KeyboardCtrlCfg(
@@ -371,6 +382,7 @@ class g1_protomotions_tracker(RlPipelineCfg):
                 "o": "[SHUTDOWN]",
                 "<": "[MOTION_FADE_IN]",
                 ">": "[MOTION_FADE_OUT]",
+                "9": "[VIRTUAL_GANTRY_RELEASE]",
             },
         ),
     ]
@@ -389,6 +401,7 @@ class g1_protomotions_tracker_real(g1_protomotions_tracker):
     Usage::
 
         python scripts/run_tracker_pipeline.py -c g1_protomotions_tracker_real \\
+            --onnx-path /path/to/unified_pipeline.onnx \\
             --motion-path assets/motions/g1/g1_bones_seed_mini.pt \\
             --motion-index 0
     """

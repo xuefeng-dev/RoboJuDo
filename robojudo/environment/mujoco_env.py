@@ -56,6 +56,77 @@ class MujocoEnv(Environment):
 
         self.update()  # get initial state
 
+        self._virtual_gantry_enabled = cfg_env.virtual_gantry_enabled
+        self._virtual_gantry_body_ids = []
+        self._virtual_gantry_target_zs = []
+        if self._virtual_gantry_enabled:
+            self._init_virtual_gantry()
+
+    def _init_virtual_gantry(self):
+        body_ids = []
+        for body_name in self.cfg_env.virtual_gantry_bodies:
+            body_id = mujoco.mj_name2id(
+                self.model,
+                mujoco.mjtObj.mjOBJ_BODY,  # pyright: ignore[reportAttributeAccessIssue]
+                body_name,
+            )
+            if body_id < 0:
+                raise ValueError(f"Virtual gantry body not found: {body_name}")
+            body_ids.append(body_id)
+
+        self._virtual_gantry_body_ids = body_ids
+        self._virtual_gantry_target_zs = [
+            float(self.data.xpos[body_id, 2])
+            + self.cfg_env.virtual_gantry_height_offset
+            for body_id in body_ids
+        ]
+        logger.warning(
+            "Virtual gantry enabled: bodies=%s target_zs=%s",
+            self.cfg_env.virtual_gantry_bodies,
+            [round(target_z, 3) for target_z in self._virtual_gantry_target_zs],
+        )
+
+    def _apply_virtual_gantry(self):
+        if not self._virtual_gantry_enabled or len(self._virtual_gantry_body_ids) == 0:
+            self.data.xfrc_applied[:, :] = 0.0
+            return
+
+        vertical_vel = float(self.data.qvel[2])
+        body_count = len(self._virtual_gantry_body_ids)
+        robot_mass = float(np.sum(self.model.body_mass))
+        gravity = abs(float(self.model.opt.gravity[2]))
+        feedforward = (
+            self.cfg_env.virtual_gantry_support_fraction
+            * robot_mass
+            * gravity
+            / body_count
+        )
+
+        self.data.xfrc_applied[:, :] = 0.0
+        for body_id, target_z in zip(
+            self._virtual_gantry_body_ids,
+            self._virtual_gantry_target_zs,
+        ):
+            body_z = float(self.data.xpos[body_id, 2])
+            # 吊带只提供向上的支撑力，不主动向下压机器人。
+            spring = self.cfg_env.virtual_gantry_stiffness * (target_z - body_z)
+            damping = -self.cfg_env.virtual_gantry_damping * vertical_vel
+            force_z = np.clip(
+                feedforward + spring + damping,
+                0.0,
+                self.cfg_env.virtual_gantry_max_force,
+            )
+            self.data.xfrc_applied[body_id, 2] = force_z
+
+    def release_virtual_gantry(self):
+        if not self._virtual_gantry_enabled:
+            return
+        self._virtual_gantry_enabled = False
+        self._virtual_gantry_body_ids = []
+        self._virtual_gantry_target_zs = []
+        self.data.xfrc_applied[:, :] = 0.0
+        logger.warning("Virtual gantry released")
+
     def _apply_random_heading(self):
         """Rotate the root body by a random yaw if random_heading is enabled."""
         if not self.random_heading:
@@ -78,6 +149,8 @@ class MujocoEnv(Environment):
             mujoco.mj_resetDataKeyframe(self.model, self.data, 0)  # pyright: ignore[reportAttributeAccessIssue]
             self._apply_random_heading()
         mujoco.mj_forward(self.model, self.data)  # pyright: ignore[reportAttributeAccessIssue]
+        if self._virtual_gantry_enabled:
+            self._init_virtual_gantry()
 
     def reset(self):
         if self.born_place_align:  # TODO: merge
@@ -151,6 +224,7 @@ class MujocoEnv(Environment):
             torque = np.clip(torque, -self.torque_limits, self.torque_limits)
 
             self.data.ctrl = torque
+            self._apply_virtual_gantry()
 
             mujoco.mj_step(self.model, self.data)  # pyright: ignore[reportAttributeAccessIssue]
             self.update(simple=True)

@@ -159,6 +159,9 @@ class RlPipeline(Pipeline):
                         logger.warning("Simulation Env reborn!")
                         self.env.reborn()  # pyright: ignore[reportAttributeAccessIssue]
                         self.policy.reset_alignment()
+                case "[VIRTUAL_GANTRY_RELEASE]":
+                    if hasattr(self.env, "release_virtual_gantry"):
+                        self.env.release_virtual_gantry()
                 case "[MOTION_RESET]" | "[MOTION_FADE_IN]":
                     self._blend_out_active = False
                     self._blend_out_step = 0

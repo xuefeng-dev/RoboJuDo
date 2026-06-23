@@ -39,6 +39,15 @@ class MujocoEnvCfg(EnvCfg):
     random_heading: bool = False
     """Randomize the robot's yaw heading on each spawn/reborn (useful for testing heading alignment)."""
 
+    virtual_gantry_enabled: bool = False
+    """仿真部署演练时启用向上的弹簧阻尼支撑。"""
+    virtual_gantry_bodies: list[str] = ["pelvis"]
+    virtual_gantry_height_offset: float = 0.05
+    virtual_gantry_stiffness: float = 2500.0
+    virtual_gantry_damping: float = 250.0
+    virtual_gantry_support_fraction: float = 0.35
+    virtual_gantry_max_force: float = 900.0
+
 
 class RobotEnvCfg(EnvCfg):
     env_type: str = "DummyEnv"
