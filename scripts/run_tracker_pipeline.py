@@ -85,10 +85,13 @@ def main():
 
     pipeline.prepare()
 
+    fps_last_time = time.perf_counter()
+    fps_frame_count = 0
+
     while True:
-        time_start = time.time()
+        time_start = time.perf_counter()
         pipeline.step()
-        time_end = time.time()
+        time_end = time.perf_counter()
         time_diff = time_end - time_start
 
         # keep the pipeline running at the desired frequency
@@ -104,6 +107,14 @@ def main():
                         pipeline.env.shutdown()
                         time.sleep(10)
                         break
+
+        fps_frame_count += 1
+        fps_now = time.perf_counter()
+        fps_elapsed = fps_now - fps_last_time
+        if fps_elapsed >= 1.0:
+            logger.info("Control loop FPS: %.1f", fps_frame_count / fps_elapsed)
+            fps_last_time = fps_now
+            fps_frame_count = 0
 
 
 if __name__ == "__main__":

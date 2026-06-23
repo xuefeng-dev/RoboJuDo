@@ -24,6 +24,7 @@ Sensor requirements (real G1)
 
 import logging
 import re
+import time
 
 import numpy as np
 import onnxruntime as ort
@@ -67,6 +68,7 @@ class ProtoMotionsTrackerPolicy(Policy):
         runtime = self._meta["_runtime"]
 
         joint_names = robot_meta["joint_names"]
+        self._joint_names = joint_names
         num_dofs = robot_meta["num_dofs"]
         stiffness = control_meta["stiffness"]
         damping = control_meta["damping"]
@@ -132,6 +134,7 @@ class ProtoMotionsTrackerPolicy(Policy):
         self._default_dof_pos = self._resolve_default_dof_pos(joint_names)
 
         self._heading_offset = None
+        self._last_error_log_time = 0.0
         self.reset()
 
     # G1 default standing pose (from protomotions.robot_configs.g1)
@@ -220,6 +223,8 @@ class ProtoMotionsTrackerPolicy(Policy):
             future_anchor_rot = np.tile(anchor_yaw_only, (num_steps, 1))
             future_dof_pos = np.tile(self._default_dof_pos, (num_steps, 1))
             future_dof_vel = np.zeros_like(future_dof_pos)
+            ref_dof_pos = self._default_dof_pos
+            ref_name = "default"
         else:
             # -- Future motion references with heading alignment --
             # Clamp each future step so it never exceeds the last valid frame.
@@ -233,6 +238,10 @@ class ProtoMotionsTrackerPolicy(Policy):
             future_anchor_rot = future_body_rot[:, self._anchor_idx, :]
             future_dof_pos = future_refs["dof_pos"]
             future_dof_vel = future_refs["dof_vel"]
+            ref_dof_pos = self._player.get_state_at_frame(self._frame)["dof_pos"]
+            ref_name = "motion"
+
+        self._log_joint_tracking_error(dof_pos, ref_dof_pos, ref_name)
 
         # -- Build ONNX inputs --
         key_to_array = {
@@ -290,6 +299,46 @@ class ProtoMotionsTrackerPolicy(Policy):
         }
         dummy_obs = np.zeros(1, dtype=np.float32)
         return dummy_obs, extras
+
+    def _log_joint_tracking_error(
+        self,
+        dof_pos: np.ndarray,
+        ref_dof_pos: np.ndarray,
+        ref_name: str,
+    ):
+        """每秒打印一次当前关节角和参考关节角的误差。"""
+        now = time.perf_counter()
+        if now - self._last_error_log_time < 1.0:
+            return
+        self._last_error_log_time = now
+
+        error_deg = np.rad2deg(dof_pos - ref_dof_pos)
+        abs_error_deg = np.abs(error_deg)
+        logger.info(
+            "[TrackerPolicy] joint error deg | ref=%s frame=%d "
+            "std=%.3f abs_max=%.3f abs_min=%.3f",
+            ref_name,
+            self._frame,
+            float(np.std(error_deg)),
+            float(np.max(abs_error_deg)),
+            float(np.min(abs_error_deg)),
+        )
+
+        ref_deg = np.rad2deg(ref_dof_pos)
+        entries = [
+            f"{name}={value:+.1f}"
+            for name, value in zip(self._joint_names, ref_deg, strict=True)
+        ]
+        lines = [
+            "  " + ", ".join(entries[i : i + 4])
+            for i in range(0, len(entries), 4)
+        ]
+        logger.info(
+            "[TrackerPolicy] ref joint deg | ref=%s frame=%d\n%s",
+            ref_name,
+            self._frame,
+            "\n".join(lines),
+        )
 
     def _get_anchor_quat(self, env_data) -> np.ndarray:
         """Read the anchor body's quaternion from env_data.

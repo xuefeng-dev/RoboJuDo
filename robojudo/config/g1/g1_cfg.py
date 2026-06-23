@@ -69,7 +69,7 @@ class g1_real(g1):
         # env_type="UnitreeEnv",  # For unitree_sdk2py
         env_type="UnitreeCppEnv",  # For unitree_cpp, check README for more details
         unitree=G1UnitreeCfg(
-            net_if="eth0",  # note: change to your network interface
+            net_if="enP8p1s0",  # 真机板载网口，当前为 192.168.123.x 网段
         ),
     )
 
@@ -409,7 +409,7 @@ class g1_protomotions_tracker_real(g1_protomotions_tracker):
     env: G1RealEnvCfg = G1RealEnvCfg(
         env_type="UnitreeCppEnv",
         unitree=G1UnitreeCfg(
-            net_if="eth0",  # note: change to your network interface
+            net_if="enP8p1s0",  # 真机板载网口，当前为 192.168.123.x 网段
         ),
         born_place_align=False,
     )
