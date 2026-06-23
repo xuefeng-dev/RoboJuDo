@@ -1,4 +1,6 @@
-compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_step7
+# compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_scor
+e_based
+compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_last
 onnx_file=$compiled_model_dir/unified_pipeline.onnx
 
 # 使用打包后的纯张量 motion library，避免 RoboJuDo 环境反序列化 .motion

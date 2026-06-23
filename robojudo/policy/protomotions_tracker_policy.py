@@ -314,15 +314,15 @@ class ProtoMotionsTrackerPolicy(Policy):
 
         error_deg = np.rad2deg(dof_pos - ref_dof_pos)
         abs_error_deg = np.abs(error_deg)
-        logger.info(
-            "[TrackerPolicy] joint error deg | ref=%s frame=%d "
-            "std=%.3f abs_max=%.3f abs_min=%.3f",
-            ref_name,
-            self._frame,
-            float(np.std(error_deg)),
-            float(np.max(abs_error_deg)),
-            float(np.min(abs_error_deg)),
-        )
+        # logger.info(
+        #     "[TrackerPolicy] joint error deg | ref=%s frame=%d "
+        #     "std=%.3f abs_max=%.3f abs_min=%.3f",
+        #     ref_name,
+        #     self._frame,
+        #     float(np.std(error_deg)),
+        #     float(np.max(abs_error_deg)),
+        #     float(np.min(abs_error_deg)),
+        # )
 
         ref_deg = np.rad2deg(ref_dof_pos)
         entries = [
@@ -333,12 +333,12 @@ class ProtoMotionsTrackerPolicy(Policy):
             "  " + ", ".join(entries[i : i + 4])
             for i in range(0, len(entries), 4)
         ]
-        logger.info(
-            "[TrackerPolicy] ref joint deg | ref=%s frame=%d\n%s",
-            ref_name,
-            self._frame,
-            "\n".join(lines),
-        )
+        # logger.info(
+        #     "[TrackerPolicy] ref joint deg | ref=%s frame=%d\n%s",
+        #     ref_name,
+        #     self._frame,
+        #     "\n".join(lines),
+        # )
 
     def _get_anchor_quat(self, env_data) -> np.ndarray:
         """Read the anchor body's quaternion from env_data.

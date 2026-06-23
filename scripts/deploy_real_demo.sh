@@ -1,9 +1,3 @@
-compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_step7
-onnx_file=$compiled_model_dir/unified_pipeline.onnx
-
-# 使用打包后的纯张量 motion library，避免 RoboJuDo 环境反序列化 .motion
-# 时依赖 protomotions Python 包。
-
 # 空翻等动作
 # motion_path=dataset/amass_kung_fu_sample/motionlib/proto-g1.pt
 # # 0: Male2MartialArtsKicks..., 1: 85_85_06..., 2: Male2MartialArtsExtended..., 3: 87_87_01...
