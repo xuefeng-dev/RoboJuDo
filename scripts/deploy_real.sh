@@ -1,6 +1,6 @@
-# compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_scor
-e_based
-compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_last
+# compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_score_based
+# compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_last
+compiled_model_dir=results/amass_kung_fu_sample_g1_v2_more_push/compiled_models
 onnx_file=$compiled_model_dir/unified_pipeline.onnx
 
 # 使用打包后的纯张量 motion library，避免 RoboJuDo 环境反序列化 .motion
@@ -12,6 +12,17 @@ motion_path=dataset/amass_kung_fu_sample/motionlib/proto-g1.pt
 # motion_index=1 # 前空翻
 motion_index=2 # 一边挥拳，一边左移，最后会向前踢腿
 # motion_index=3 # 空中大幅度转身
+
+motion_height_offset=-0.03 # 参考动作高度偏移，负数表示降低高度
+
+# 1: 将参考动作第 0 帧作为准备和淡出的默认姿态；0: 使用环境默认站姿。
+default_pose_from_motion_first_frame=1
+
+if [ "$default_pose_from_motion_first_frame" = "1" ]; then
+    default_pose_arg=--default-pose-from-motion-first-frame
+else
+    default_pose_arg=
+fi
 
 onnx_file=$(realpath "$onnx_file")
 motion_path=$(realpath "$motion_path")
@@ -35,4 +46,6 @@ EOF
 "$robojudo_python" scripts/run_tracker_pipeline.py -c g1_protomotions_tracker_real \
     --onnx-path "$onnx_file" \
     --motion-path "$motion_path" \
-    --motion-index "$motion_index"
+    --motion-index "$motion_index" \
+    --motion-height-offset "$motion_height_offset" \
+    $default_pose_arg
