@@ -29,6 +29,8 @@ class ProtoMotionsTrackerPolicyCfg(PolicyCfg):
     motion_path: str = ""
     motion_index: int = 0
     """Index of the motion clip within a multi-motion .pt library."""
+    default_pose_from_motion_first_frame: bool = False
+    """Use frame 0 of the reference motion as the default pose."""
 
     @property
     def policy_file(self) -> str:

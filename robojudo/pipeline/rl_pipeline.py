@@ -102,6 +102,16 @@ class RlPipeline(Pipeline):
     def _has_default_pose_mode(self) -> bool:
         return hasattr(self._inner_policy(), "set_default_pose_mode")
 
+    @property
+    def _default_pose_from_motion_first_frame(self) -> bool:
+        return bool(
+            getattr(
+                self.cfg.policy,
+                "default_pose_from_motion_first_frame",
+                False,
+            )
+        )
+
     def _set_default_pose_mode(self, enabled: bool):
         """Enable/disable default-pose mode on the inner policy (if supported)."""
         inner = self._inner_policy()
@@ -121,9 +131,12 @@ class RlPipeline(Pipeline):
         self._blend_out_step = 0
         self._blend_out_duration = int(5.0 * self.freq)  # 5 seconds
 
-        # For tracker policies with default-pose mode, ramp/blend target is
-        # the env's default standing pose.  Otherwise, use motion frame 0.
-        if self._has_default_pose_mode:
+        # For tracker policies with default-pose mode, ramp/blend target usually
+        # is the env's default standing pose. Optionally use motion frame 0.
+        if (
+            self._has_default_pose_mode
+            and not self._default_pose_from_motion_first_frame
+        ):
             self._init_dof_pos = np.asarray(self.env.dof_cfg.default_pos, dtype=np.float32)
         else:
             self._init_dof_pos = np.asarray(self.policy.get_init_dof_pos(), dtype=np.float32)
@@ -295,8 +308,11 @@ class RlPipeline(Pipeline):
     def prepare(self, init_motor_angle=None, prepare_seconds=None):
         if init_motor_angle is not None:
             desired_motor_angle = init_motor_angle
-        elif self._has_default_pose_mode:
-            # Ramp to the env's default standing pose (not motion frame 0).
+        elif (
+            self._has_default_pose_mode
+            and not self._default_pose_from_motion_first_frame
+        ):
+            # Ramp to the env's default standing pose.
             desired_motor_angle = np.array(
                 self.env.dof_cfg.default_pos, dtype=np.float32
             )
@@ -342,7 +358,7 @@ class RlPipeline(Pipeline):
 
         # ── Phase 2: Blend in policy (holding default pose) ──
         # Policy runs in default-pose mode (if supported): it sees synthetic
-        # references for the standing pose, not the real motion.
+        # references for the configured default pose, not the real timeline.
         # Actions blend from raw default DOF to policy output.
         self._set_default_pose_mode(True)
 

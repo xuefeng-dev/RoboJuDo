@@ -2,7 +2,7 @@
 
 Extends the generic pipeline runner with tracker-specific features:
 - CLI overrides for ONNX model, motion file, and motion index
-- Default-pose mode: hold standing pose until R is pressed
+- Default-pose mode: hold default pose until R is pressed
 
 Usage::
 
@@ -57,6 +57,11 @@ def parse_args():
         default=None,
         help="Index of motion clip within a multi-motion .pt library",
     )
+    parser.add_argument(
+        "--default-pose-from-motion-first-frame",
+        action="store_true",
+        help="Use frame 0 of the reference motion as the default pose",
+    )
     args = parser.parse_args()
     return args
 
@@ -75,6 +80,8 @@ def main():
         cfg.policy.motion_path = args.motion_path
     if args.motion_index is not None and hasattr(cfg, "policy"):
         cfg.policy.motion_index = args.motion_index
+    if args.default_pose_from_motion_first_frame and hasattr(cfg, "policy"):
+        cfg.policy.default_pose_from_motion_first_frame = True
 
     pipeline_type = cfg.pipeline_type
 

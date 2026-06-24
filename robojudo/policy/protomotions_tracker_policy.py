@@ -106,6 +106,9 @@ class ProtoMotionsTrackerPolicy(Policy):
         self._player = MotionPlayer(
             motion_path, motion_index=motion_index, control_dt=timing["control_dt"]
         )
+        self._default_pose_from_motion_first_frame = bool(
+            getattr(cfg_policy, "default_pose_from_motion_first_frame", False)
+        )
 
         # ONNX input config
         self._anchor_idx = robot_meta["anchor_body_index"]
@@ -213,7 +216,20 @@ class ProtoMotionsTrackerPolicy(Policy):
         # as root_local_ang_vel -- NO quat_rotate_inverse needed.
         root_local_ang_vel = np.asarray(env_data.base_ang_vel, dtype=np.float32)
 
-        if self._default_pose_mode:
+        if self._default_pose_mode and self._default_pose_from_motion_first_frame:
+            num_steps = len(self._future_step_indices)
+            first_state = self._player.get_state_at_frame(0)
+            first_body_rot = apply_heading_offset_np(
+                self._heading_offset, first_state["body_rot"][None]
+            )[0]
+            future_anchor_rot = np.tile(
+                first_body_rot[self._anchor_idx], (num_steps, 1)
+            )
+            future_dof_pos = np.tile(first_state["dof_pos"], (num_steps, 1))
+            future_dof_vel = np.zeros_like(future_dof_pos)
+            ref_dof_pos = first_state["dof_pos"]
+            ref_name = "motion_frame0"
+        elif self._default_pose_mode:
             # -- Synthetic references: hold default standing pose --
             # Target DOFs = default standing pose, velocities = zero,
             # anchor rotation = yaw-only from robot's current anchor (hold
