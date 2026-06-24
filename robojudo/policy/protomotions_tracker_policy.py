@@ -102,9 +102,13 @@ class ProtoMotionsTrackerPolicy(Policy):
         if motion_path is None:
             raise ValueError("ProtoMotionsTrackerPolicyCfg must set motion_path")
         motion_index = getattr(cfg_policy, "motion_index", 0)
+        motion_height_offset = getattr(cfg_policy, "motion_height_offset", 0.0)
         timing = self._meta["timing"]
         self._player = MotionPlayer(
-            motion_path, motion_index=motion_index, control_dt=timing["control_dt"]
+            motion_path,
+            motion_index=motion_index,
+            control_dt=timing["control_dt"],
+            height_offset=motion_height_offset,
         )
         self._default_pose_from_motion_first_frame = bool(
             getattr(cfg_policy, "default_pose_from_motion_first_frame", False)

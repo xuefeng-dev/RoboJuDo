@@ -29,6 +29,8 @@ class ProtoMotionsTrackerPolicyCfg(PolicyCfg):
     motion_path: str = ""
     motion_index: int = 0
     """Index of the motion clip within a multi-motion .pt library."""
+    motion_height_offset: float = 0.0
+    """Temporary z-axis offset for reference motion body positions, in meters."""
     default_pose_from_motion_first_frame: bool = False
     """Use frame 0 of the reference motion as the default pose."""
 

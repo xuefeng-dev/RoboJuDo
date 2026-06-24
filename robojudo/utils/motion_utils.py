@@ -126,6 +126,7 @@ class MotionPlayer:
         motion_file: str,
         motion_index: int = 0,
         control_dt: float = 0.02,
+        height_offset: float = 0.0,
     ):
         import torch
 
@@ -137,6 +138,7 @@ class MotionPlayer:
             self._load_cache(data)
         else:
             self._load_raw(data, motion_index, control_dt)
+        self._apply_height_offset(height_offset)
 
     @property
     def total_frames(self) -> int:
@@ -203,6 +205,14 @@ class MotionPlayer:
     # ------------------------------------------------------------------
     # Private helpers
     # ------------------------------------------------------------------
+
+    def _apply_height_offset(self, height_offset: float) -> None:
+        height_offset = float(height_offset)
+        if height_offset == 0.0:
+            return
+        self._body_pos = self._body_pos.copy()
+        self._body_pos[..., 2] += height_offset
+        print(f"[MotionPlayer] Applied body height offset: {height_offset:+.3f} m")
 
     def _load_cache(self, data: dict) -> None:
         self._dof_pos      = np.asarray(data["dof_pos"],      dtype=np.float32)

@@ -62,6 +62,12 @@ def parse_args():
         action="store_true",
         help="Use frame 0 of the reference motion as the default pose",
     )
+    parser.add_argument(
+        "--motion-height-offset",
+        type=float,
+        default=None,
+        help="Add a temporary z-axis offset to reference motion body positions, in meters",
+    )
     args = parser.parse_args()
     return args
 
@@ -82,6 +88,8 @@ def main():
         cfg.policy.motion_index = args.motion_index
     if args.default_pose_from_motion_first_frame and hasattr(cfg, "policy"):
         cfg.policy.default_pose_from_motion_first_frame = True
+    if args.motion_height_offset is not None and hasattr(cfg, "policy"):
+        cfg.policy.motion_height_offset = args.motion_height_offset
 
     pipeline_type = cfg.pipeline_type
 
