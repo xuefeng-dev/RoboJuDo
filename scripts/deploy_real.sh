@@ -1,6 +1,14 @@
-dataset_name=amass_kung_fu_1motion
+dataset_name=kimodo_walking_4motion
+experiment_name=kimodo_walking_4motion_g1
 motion_index=0
-experiment_name=amass_kung_fu_sample_g1_v3_1motion
+motion_height_offset=-0.02 # 参考动作高度偏移，负数表示降低高度
+
+
+# dataset_name=amass_kung_fu_1motion
+# motion_index=0
+# experiment_name=kimodo_soma_walking_1motion_g1
+
+
 
 # compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_score_based
 # compiled_model_dir=results/amass_kung_fu_sample_g1_bm_tracker/compiled_models_last
@@ -8,7 +16,7 @@ compiled_model_dir=results/$experiment_name/compiled_models
 onnx_file=$compiled_model_dir/unified_pipeline.onnx
 
 motion_path=dataset/$dataset_name/motionlib/proto-g1.pt
-motion_height_offset=-0.03 # 参考动作高度偏移，负数表示降低高度
+
 
 # 1: 将参考动作第 0 帧作为准备和淡出的默认姿态；0: 使用环境默认站姿。
 default_pose_from_motion_first_frame=1
