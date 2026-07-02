@@ -1,7 +1,21 @@
-dataset_name=kimodo_walking_4motion
-experiment_name=kimodo_walking_4motion_g1
+## release
+dataset_name=kungfu_athlete_bot_ground_g1_1motion_org_smooth_stitching
+experiment_name=kungfu_athlete_bot_ground_g1_1motion_org_smooth_stitching_use_bones_pretrained
 motion_index=0
-motion_height_offset=-0.02 # 参考动作高度偏移，负数表示降低高度
+motion_height_offset=-0.0 # 参考动作高度偏移，负数表示降低高度
+
+# ## issue: 初始化时就会输出极大的关节角度然后触发G1 的底层保护
+# dataset_name=kungfu_athlete_bot_ground_g1_1motion_org_smooth_stitching
+# experiment_name=kungfu_athlete_bot_ground_g1_1motion_org_smooth_stitching
+# motion_index=0
+# motion_height_offset=-0.02 # 参考动作高度偏移，负数表示降低高度
+
+# ## release
+# dataset_name=kimodo_walking_4motion
+# experiment_name=kimodo_walking_4motion_g1
+# motion_index=0
+# motion_height_offset=-0.02 # 参考动作高度偏移，负数表示降低高度
+
 
 
 # dataset_name=amass_kung_fu_1motion
